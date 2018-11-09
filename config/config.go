@@ -21,10 +21,19 @@ var (
 
 var mConfig *configure.Configure
 
+type TLSType int
+
+const (
+	TLSOff TLSType = iota
+	TLSInsecure
+	TLSSecure
+)
+
 type Server struct {
 	Host       string `default:"127.0.0.1" toml:"host"`
 	Port       string `default:"50051" toml:"port"`
 	Reflection bool   `default:"false" toml:"reflection"`
+	TLS        TLS    `toml:"tls"`
 }
 
 type Header struct {
@@ -81,6 +90,10 @@ type Default struct {
 
 type Log struct {
 	Prefix string `default:"[evans] " toml:"prefix"`
+}
+
+type TLS struct {
+	Type TLSType `default:"0" toml:"type"`
 }
 
 func init() {

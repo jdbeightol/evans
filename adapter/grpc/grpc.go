@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials"
 )
 
 type client struct {
@@ -20,13 +22,37 @@ type client struct {
 	*reflectionClient
 }
 
+type clientOpts struct {
+	opts []grpc.DialOption
+}
+
+type ClientOpt func(*clientOpts)
+
+func WithInsecure() ClientOpt {
+	return func(c *clientOpts) {
+		c.opts = append(c.opts, grpc.WithInsecure())
+	}
+}
+
+func WithTLSInsecure() ClientOpt {
+	return func(c *clientOpts) {
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		c.opts = append(c.opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
+	}
+}
+
 // NewClient creates a new gRPC client.
 // It dials to the server specified by addr.
 // addr format is same as the first argument of grpc.Dial.
 // If useReflection is true, the gRPC client enables gRPC reflection.
-func NewClient(addr string, useReflection bool) (entity.GRPCClient, error) {
-	// TODO: secure option
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+func NewClient(addr string, useReflection bool, opts ...ClientOpt) (entity.GRPCClient, error) {
+	co := &clientOpts{}
+	for _, opt := range opts {
+		opt(co)
+	}
+	conn, err := grpc.Dial(addr, co.opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to dial to gRPC server")
 	}

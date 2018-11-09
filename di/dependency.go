@@ -188,7 +188,16 @@ func initGRPCClient(cfg *config.Config) error {
 			}
 			gRPCClient = grpc.NewWebClient(addr, cfg.Server.Reflection, b)
 		} else {
-			gRPCClient, err = grpc.NewClient(addr, cfg.Server.Reflection)
+			opts := []grpc.ClientOpt{}
+			switch cfg.Server.TLS.Type {
+			case config.TLSInsecure:
+				opts = append(opts, grpc.WithTLSInsecure())
+			case config.TLSSecure:
+				// TODO: secure option
+			default:
+				opts = append(opts, grpc.WithInsecure())
+			}
+			gRPCClient, err = grpc.NewClient(addr, cfg.Server.Reflection, opts...)
 		}
 	})
 	return err

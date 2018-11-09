@@ -62,6 +62,7 @@ Options:
 	--header HEADER		%s
 	--web			%s
 	--reflection, -r	%s
+	--tls-insecure		%s
 
 	--help, -h		%s
 	--version, -v		%s
@@ -69,20 +70,21 @@ Options:
 
 func (c *Command) parseFlags(args []string) *options {
 	const (
-		edit       = "edit config file using by $EDITOR"
-		repl       = "start as REPL mode"
-		cli        = "start as CLI mode"
-		silent     = "hide splash"
-		host       = "gRPC server host"
-		port       = "gRPC server port"
-		pkg        = "default package"
-		service    = "default service"
-		call       = "call specified RPC by CLI mode"
-		file       = "the script file which will be executed by (used only CLI mode)"
-		path       = "proto file paths"
-		header     = "default headers which set to each requests (example: foo=bar)"
-		web        = "use gRPC Web protocol"
-		reflection = "use gRPC reflection"
+		edit        = "edit config file using by $EDITOR"
+		repl        = "start as REPL mode"
+		cli         = "start as CLI mode"
+		silent      = "hide splash"
+		host        = "gRPC server host"
+		port        = "gRPC server port"
+		pkg         = "default package"
+		service     = "default service"
+		call        = "call specified RPC by CLI mode"
+		file        = "the script file which will be executed by (used only CLI mode)"
+		path        = "proto file paths"
+		header      = "default headers which set to each requests (example: foo=bar)"
+		web         = "use gRPC Web protocol"
+		reflection  = "use gRPC reflection"
+		tlsInsecure = "use TLS without verifying server certificates"
 
 		version = "display version and exit"
 		help    = "display this help and exit"
@@ -109,6 +111,7 @@ func (c *Command) parseFlags(args []string) *options {
 			header,
 			web,
 			reflection,
+			tlsInsecure,
 			help,
 			version,
 		)
@@ -135,6 +138,7 @@ func (c *Command) parseFlags(args []string) *options {
 	f.BoolVar(&opts.web, "web", false, web)
 	f.BoolVar(&opts.reflection, "reflection", false, reflection)
 	f.BoolVar(&opts.reflection, "r", false, reflection)
+	f.BoolVar(&opts.tlsInsecure, "tls-insecure", false, tlsInsecure)
 	f.BoolVar(&opts.version, "version", false, version)
 	f.BoolVar(&opts.version, "v", false, version)
 
@@ -151,19 +155,20 @@ type options struct {
 	editConfig bool
 
 	// config options
-	repl       bool
-	cli        bool
-	silent     bool
-	host       string
-	port       string
-	pkg        string
-	service    string
-	call       string
-	file       string
-	path       optStrSlice
-	header     optStrSlice
-	web        bool
-	reflection bool
+	repl        bool
+	cli         bool
+	silent      bool
+	host        string
+	port        string
+	pkg         string
+	service     string
+	call        string
+	file        string
+	path        optStrSlice
+	header      optStrSlice
+	web         bool
+	reflection  bool
+	tlsInsecure bool
 
 	// meta options
 	version bool
@@ -486,6 +491,10 @@ func mergeConfig(cfg *config.Config, opt *options, proto []string) (*config.Conf
 
 	if opt.reflection {
 		mc.Server.Reflection = true
+	}
+
+	if opt.tlsInsecure {
+		mc.Server.TLS.Type = config.TLSInsecure
 	}
 
 	config.SetupConfig(mc)

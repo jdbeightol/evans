@@ -35,3 +35,6 @@ vendor/
 
 pkg
 dep.png
+
+# Editor configuration
+.vscode
